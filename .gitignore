@@ -1,0 +1,16 @@
+/.DS_Store
+
+/animate/.DS_Store
+/animate/src/.DS_Store
+/animate/Cargo.lock
+/animate/target
+
+/bur/.DS_Store
+/bur/src/.DS_Store
+/bur/Cargo.lock
+/bur/target
+
+/pun/.DS_Store
+/pun/src/.DS_Store
+/pun/Cargo.lock
+/pun/target
