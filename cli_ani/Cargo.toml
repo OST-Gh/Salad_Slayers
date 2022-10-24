@@ -1,0 +1,11 @@
+[package]
+name = "cli_ani"
+version = "0.1.0"
+edition = "2021"
+[dependencies]
+lib = { path = "../../ost/lib" }
+[profile.release]
+opt-level = 3
+strip = true
+lto = true
+codegen-units = 1

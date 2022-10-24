@@ -1,5 +1,10 @@
 /.DS_Store
 
+/cli_ani/.DS_Store
+/cli_ani/src/.DS_Store
+/cli_ani/Cargo.lock
+/cli_ani/target
+
 /animate/.DS_Store
 /animate/src/.DS_Store
 /animate/Cargo.lock
