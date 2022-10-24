@@ -1,0 +1,12 @@
+[package]
+name = "TXT-NMTN-NTRPRTR"
+version = "0.1.0"
+edition = "2021"
+[dependencies]
+lib = { path = "../../ost/lib" }
+dirs = "4.0.0"
+[profile.release]
+opt-level = 3
+strip = true
+lto = true
+codegen-units = 1
