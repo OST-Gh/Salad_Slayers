@@ -1,4 +1,6 @@
 use lib::* ;
+use std::fs::read_to_string ;
+use std::path::PathBuf ;
 
 fn main ( ) -> Result < Void > {
 
@@ -11,6 +13,62 @@ fn main ( ) -> Result < Void > {
             Result::Fine  ( value ) => {
 
                 if value == "@" { break ; } ;
+
+                if value .starts_with ( "script!" ) {
+
+                    let name : &str = value .trim_start_matches ( "script!" ) .trim ( ) ;
+
+                    let home : PathBuf = match dirs::home_dir ( ) {
+
+                        Some ( value ) => {
+
+                            let mut path : PathBuf = value ;
+
+                            path .push ( &format! ( "{name}.txt" ) ) ;
+
+                            path
+
+                        } ,
+
+                        None => {
+
+                            return Result::Error ( Error::Environment ) ;
+
+                        } ,
+
+                    } ;
+
+                    text = match read_to_string ( &home ) {
+
+                        Ok ( text ) => {
+
+                            text .split ( "\n" ) .map (
+
+                                | line : &str | -> String {
+
+                                    if line .ends_with ( "\\n" ) {
+
+                                        format! ( "{}\n" , line .trim_end_matches ( "\\n" ) )
+
+                                    } else {
+
+                                        String::from ( line )
+
+                                    }
+
+                                }
+
+                            ) .collect:: < Vec < String > > ( )
+
+                        } ,
+
+                        Err ( _void ) => { return Result::Error ( Error::Read ) ; } ,
+
+                    } ;
+
+                    break ;
+
+                } ;
 
                 if value .ends_with ( "\\n" ) {
 
