@@ -4,178 +4,209 @@ use std::path::PathBuf ;
 
 fn main ( ) -> Result < Void > {
 
-    let mut text : Vec < String > = Vec::new ( ) ;
-
     loop {
 
-        match read_line ( Some ( "|  " ) ) {
+        let mut text : Vec < String > = Vec::new ( ) ;
 
-            Result::Fine  ( value ) => {
+        let mut quit : bool = false ;
 
-                if value == "@" { break ; } ;
+        loop {
 
-                if value .starts_with ( "script!" ) {
+            match read_line ( Some ( "|  " ) ) {
 
-                    let name : &str = value .trim_start_matches ( "script!" ) .trim ( ) ;
+                Result::Fine  ( value ) => {
 
-                    let home : PathBuf = match dirs::home_dir ( ) {
+                    if value == "@" {
 
-                        Some ( value ) => {
+                        quit = true ;
 
-                            let mut path : PathBuf = value ;
-
-                            path .push ( &format! ( "{name}.txt" ) ) ;
-
-                            path
-
-                        } ,
-
-                        None => {
-
-                            return Result::Error ( Error::Environment ) ;
-
-                        } ,
+                        break ;
 
                     } ;
 
-                    text = match read_to_string ( &home ) {
+                    if value == "start!" {
 
-                        Ok ( text ) => {
+                        break ;
 
-                            text .split ( "\n" ) .map (
+                    } ;
 
-                                | line : &str | -> String {
+                    if value .starts_with ( "script!" ) {
 
-                                    if line .ends_with ( "\\n" ) {
+                        let name : &str = value .trim_start_matches ( "script!" ) .trim ( ) ;
 
-                                        format! ( "{}\n" , line .trim_end_matches ( "\\n" ) )
+                        let home : PathBuf = match dirs::home_dir ( ) {
 
-                                    } else {
+                            Some ( value ) => {
 
-                                        String::from ( line )
+                                let mut path : PathBuf = value ;
+
+                                path .push ( &format! ( "{name}.txt" ) ) ;
+
+                                path
+
+                            } ,
+
+                            None => {
+
+                                return Result::Error ( Error::Environment ) ;
+
+                            } ,
+
+                        } ;
+
+                        text = match read_to_string ( &home ) {
+
+                            Ok ( text ) => {
+
+                                text .split ( "\n" ) .map (
+
+                                    | line : &str | -> String {
+
+                                        if line .ends_with ( "\\n" ) {
+
+                                            format! ( "{}\n" , line .trim_end_matches ( "\\n" ) )
+
+                                        } else {
+
+                                            String::from ( line )
+
+                                        }
 
                                     }
 
-                                }
+                                ) .collect:: < Vec < String > > ( )
 
-                            ) .collect:: < Vec < String > > ( )
+                            } ,
 
-                        } ,
+                            Err ( _void ) => { return Result::Error ( Error::Read ) ; } ,
 
-                        Err ( _void ) => { return Result::Error ( Error::Read ) ; } ,
+                        } ;
+
+                        break ;
 
                     } ;
 
-                    break ;
+                    if value .ends_with ( "\\n" ) {
+
+                        text .push ( format! ( "{}\n" , &value [ .. ( value .len ( ) - 2_usize ) ] ) ) 
+
+                    } else {
+
+                        text .push ( value ) ;
+
+                    }
+
+                } ,
+
+                Result::Error ( error ) => { return Result::Error ( error ) } ,
+
+            } ;
+
+        }
+
+        if quit { break ; } ;
+
+        let start : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "run!" ) {
+
+            Some ( value ) => { value                                      } ,
+            None           => { return Result::Error ( Error::Position ) ; } ,
+
+        } ;
+
+        let stop  : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "end!" ) {
+
+            Some ( value ) => { value                                      } ,
+            None           => { return Result::Error ( Error::Position ) ; } ,
+
+        } ;
+
+        let mut all_frames     : Vec < Vec < Vec < ( String , u64 ) > > > = Vec::new ( ) ;
+        let mut looping_frames : Vec < Vec <       ( String , u64 )   > > = Vec::new ( ) ;
+        let mut frames         : Vec <             ( String , u64 )     > = Vec::new ( ) ;
+
+        let mut is_loop : bool = false ;
+
+        let mut range : usize = 0_usize ;
+
+        for command in &text .clone ( ) [ start .. stop ] {
+
+            let command : &str = command .trim ( ) ;
+
+            if is_loop && command .starts_with ( "#" ) {
+
+                let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
+
+                let duration : u64 = match command [ 0_usize ] .trim ( ) .parse:: < u64 > ( ) {
+
+                    Ok  ( value ) => { value                                   } ,
+                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
 
                 } ;
 
-                if value .ends_with ( "\\n" ) {
+                frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
 
-                    text .push ( format! ( "{}\n" , &value [ .. ( value .len ( ) - 2_usize ) ] ) ) 
+            } ;
 
-                } else {
+            if !is_loop && command .starts_with ( "#" ) {
 
-                    text .push ( value ) ;
+                let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
+
+                let duration : u64 = match command [ 0_usize ] .trim ( ) .parse:: < u64 > ( ) {
+
+                    Ok  ( value ) => { value                                   } ,
+                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
+
+                } ;
+
+                frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
+
+                all_frames .push ( vec! [ vec! [ ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ] ] ) ;
+
+            } ;
+
+            if command .ends_with ( "[" ) {
+
+                is_loop = true ;
+
+                range = match command .trim_end_matches ( "[") .trim ( ) .parse:: < usize > ( ) {
+
+                    Ok  ( value ) => { value                                   } ,
+                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
+
+                } ;
+
+            } ;
+
+            if command .starts_with ( "]" ) {
+
+                is_loop = false ;
+
+                let condition : usize = match command .trim_start_matches ( "]") .trim ( ) .parse:: < usize > ( ) {
+
+                    Ok  ( value ) => { value                                   } ,
+                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
+
+                } ;
+
+                if condition != range { return Result::Error ( Error::Compare ) ; } ;
+
+                for _void in 0_usize .. range {
+
+                    looping_frames .push ( frames .clone ( ) ) ;
 
                 }
 
-            } ,
+                all_frames .push ( looping_frames .clone ( ) ) ;
 
-            Result::Error ( error ) => { return Result::Error ( error ) } ,
+            } ;
 
-        } ;
+        }
+
+        animate ( all_frames ) ;
+
+        println! ( "" ) ;
 
     }
-
-    let start : usize = match text .clone ( ) .iter ( ) .position ( | text | *text == String::from ( "run!" ) ) {
-
-        Some ( value ) => { value                                      } ,
-        None           => { return Result::Error ( Error::Position ) ; } ,
-
-    } ;
-
-    let stop  : usize = match text .clone ( ) .iter ( ) .position ( | text | *text == String::from ( "end!" ) ) {
-
-        Some ( value ) => { value                                      } ,
-        None           => { return Result::Error ( Error::Position ) ; } ,
-
-    } ;
-
-    let mut all_frames     : Vec < Vec < Vec < ( String , u64 ) > > > = Vec::new ( ) ;
-    let mut looping_frames : Vec < Vec <       ( String , u64 )   > > = Vec::new ( ) ;
-    let mut frames         : Vec <             ( String , u64 )     > = Vec::new ( ) ;
-
-    let mut is_loop : bool = false ;
-
-    let mut range : usize = 0_usize ;
-
-    for command in &text .clone ( ) [ start .. stop ] {
-
-        if is_loop && command .starts_with ( "#" ) {
-
-            let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
-
-            let duration : u64 = match command [ 0_usize ] .parse:: < u64 > ( ) {
-
-                Ok  ( value ) => { value                                   } ,
-                Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
-
-            } ;
-
-            frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
-
-        } ;
-
-        if !is_loop && command .starts_with ( "#" ) {
-
-            let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
-
-            let duration : u64 = match command [ 0_usize ] .parse:: < u64 > ( ) {
-
-                Ok  ( value ) => { value                                   } ,
-                Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
-
-            } ;
-
-            frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
-
-            all_frames .push ( vec! [ vec! [ ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ] ] ) ;
-
-        } ;
-
-        if command .ends_with ( "[" ) {
-
-            is_loop = true ;
-
-            range = match command .trim_end_matches ( "[") .parse:: < usize > ( ) {
-
-                Ok  ( value ) => { value                                   } ,
-                Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
-
-            } ;
-
-        } ;
-
-        if command .starts_with ( "]" ) {
-
-            is_loop = false ;
-
-            for _void in 0_usize .. range {
-
-                looping_frames .push ( frames .clone ( ) ) ;
-
-            }
-
-            all_frames .push ( looping_frames .clone ( ) ) ;
-
-        } ;
-
-    }
-
-    animate ( all_frames ) ;
-
-    println! ( "" ) ;
 
     return Result::Fine ( Void ) ;
 
