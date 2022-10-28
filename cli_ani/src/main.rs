@@ -158,8 +158,6 @@ fn main ( ) -> Result < Void > {
 
                 } ;
 
-                frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
-
                 all_frames .push ( vec! [ vec! [ ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ] ] ) ;
 
             } ;
