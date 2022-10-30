@@ -32,7 +32,7 @@ fn main ( ) -> Result < Void > {
 
                     if value .starts_with ( "script!" ) {
 
-                        let name : &str = value .trim_start_matches ( "script!" ) .trim ( ) ;
+                        let name : &str = value .trim ( ) .trim_start_matches ( "script!" ) .trim ( ) ;
 
                         let home : PathBuf = match dirs::home_dir ( ) {
 
@@ -103,23 +103,23 @@ fn main ( ) -> Result < Void > {
             } ;
 
         }
-
+        
         if quit { break ; } ;
-
+ 
         let start : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "run!" ) {
 
             Some ( value ) => { value                                      } ,
             None           => { return Result::Error ( Error::Position ) ; } ,
 
         } ;
-
+        
         let stop  : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "end!" ) {
 
             Some ( value ) => { value                                      } ,
             None           => { return Result::Error ( Error::Position ) ; } ,
 
         } ;
-
+        
         let mut all_frames     : Vec < Vec < Vec < ( String , u64 ) > > > = Vec::new ( ) ;
         let mut looping_frames : Vec < Vec <       ( String , u64 )   > > = Vec::new ( ) ;
         let mut frames         : Vec <             ( String , u64 )     > = Vec::new ( ) ;
