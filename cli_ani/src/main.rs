@@ -10,6 +10,8 @@ fn main ( ) -> Result < Void > {
 
         let mut quit : bool = false ;
 
+        let mut debug : bool = false ;
+
         loop {
 
             match read_line ( Some ( "|  " ) ) {
@@ -27,6 +29,12 @@ fn main ( ) -> Result < Void > {
                     if value == "start!" {
 
                         break ;
+
+                    } ;
+
+                    if value .starts_with ( "debug!" ) {
+
+                        debug = true ;
 
                     } ;
 
@@ -62,15 +70,7 @@ fn main ( ) -> Result < Void > {
 
                                     | line : &str | -> String {
 
-                                        if line .ends_with ( "\\n" ) {
-
-                                            format! ( "{}\n" , line .trim_end_matches ( "\\n" ) )
-
-                                        } else {
-
-                                            String::from ( line )
-
-                                        }
+                                        String::from ( line )
 
                                     }
 
@@ -86,15 +86,7 @@ fn main ( ) -> Result < Void > {
 
                     } ;
 
-                    if value .ends_with ( "\\n" ) {
-
-                        text .push ( format! ( "{}\n" , &value [ .. ( value .len ( ) - 2_usize ) ] ) ) 
-
-                    } else {
-
-                        text .push ( value ) ;
-
-                    }
+                    text .push ( value ) ;
 
                 } ,
 
@@ -105,6 +97,8 @@ fn main ( ) -> Result < Void > {
         }
         
         if quit { break ; } ;
+
+        text = text .into_iter ( ) .map ( | line : String | -> String { line .replace ( "\\n" , "\n" ) } ) .collect:: < Vec < String > > ( ) ;
  
         let start : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "run!" ) {
 
@@ -132,7 +126,7 @@ fn main ( ) -> Result < Void > {
 
             let command : &str = command .trim ( ) ;
 
-            if is_loop && command .starts_with ( "#" ) {
+            if command .starts_with ( "#" ) {
 
                 let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
 
@@ -143,22 +137,16 @@ fn main ( ) -> Result < Void > {
 
                 } ;
 
-                frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
+                if is_loop {
 
-            } ;
+                    frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
 
-            if !is_loop && command .starts_with ( "#" ) {
+                } else {
 
-                let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
+                    all_frames .push ( vec! [ vec! [ ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ] ] )
 
-                let duration : u64 = match command [ 0_usize ] .trim ( ) .parse:: < u64 > ( ) {
-
-                    Ok  ( value ) => { value                                   } ,
-                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
-
-                } ;
-
-                all_frames .push ( vec! [ vec! [ ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ] ] ) ;
+                }
+                    
 
             } ;
 
@@ -197,6 +185,12 @@ fn main ( ) -> Result < Void > {
                 all_frames .push ( looping_frames .clone ( ) ) ;
 
             } ;
+
+        }
+        
+        if debug {
+
+            println! ( "{all_frames:#?}" ) ;
 
         }
 
