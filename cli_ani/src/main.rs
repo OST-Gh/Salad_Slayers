@@ -1,4 +1,4 @@
-use lib::* ;
+use lib:: { Result , Void , read_line , Error , animate } ;
 use std::fs::read_to_string ;
 use std::path::PathBuf ;
 
@@ -99,7 +99,7 @@ fn main ( ) -> Result < Void > {
         if quit { break ; } ;
 
         text = text .into_iter ( ) .map ( | line : String | -> String { line .replace ( "\\n" , "\n" ) } ) .collect:: < Vec < String > > ( ) ;
- 
+
         let start : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "run!" ) {
 
             Some ( value ) => { value                                      } ,
@@ -114,9 +114,8 @@ fn main ( ) -> Result < Void > {
 
         } ;
         
-        let mut all_frames     : Vec < Vec < Vec < ( String , u64 ) > > > = Vec::new ( ) ;
-        let mut looping_frames : Vec < Vec <       ( String , u64 )   > > = Vec::new ( ) ;
-        let mut frames         : Vec <             ( String , u64 )     > = Vec::new ( ) ;
+        let mut frames : Vec < ( String , u64 ) > = Vec::new ( ) ;
+        let mut buffer : Vec < ( String , u64 ) > = Vec::new ( ) ;
 
         let mut is_loop : bool = false ;
 
@@ -139,11 +138,11 @@ fn main ( ) -> Result < Void > {
 
                 if is_loop {
 
-                    frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
+                    buffer .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
 
                 } else {
 
-                    all_frames .push ( vec! [ vec! [ ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ] ] )
+                    frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
 
                 }
                     
@@ -178,11 +177,13 @@ fn main ( ) -> Result < Void > {
 
                 for _void in 0_usize .. range {
 
-                    looping_frames .push ( frames .clone ( ) ) ;
+                    for frame in buffer .clone ( ) {
+
+                        frames .push ( frame .clone ( ) ) ;
+
+                    }
 
                 }
-
-                all_frames .push ( looping_frames .clone ( ) ) ;
 
             } ;
 
@@ -190,11 +191,11 @@ fn main ( ) -> Result < Void > {
         
         if debug {
 
-            println! ( "{all_frames:#?}" ) ;
+            println! ( "{frames:#?}" ) ;
 
         }
 
-        animate ( all_frames ) ;
+        animate ( frames ) ;
 
         println! ( "" ) ;
 
