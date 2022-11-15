@@ -1,6 +1,7 @@
-use lib:: { Result , Void , read_line , Error , animate } ;
+use lib::* ;
 use std::fs::read_to_string ;
 use std::path::PathBuf ;
+use std::io::Write ;
 
 fn main ( ) -> Result < Void > {
 
@@ -195,7 +196,11 @@ fn main ( ) -> Result < Void > {
 
         }
 
-        animate ( frames ) ;
+        let mut timings : std::vec::IntoIter < u64 > = frames .clone ( ) .into_iter ( ) .map ( | frame : ( String , u64 ) | -> u64 { frame .1 } ) .collect:: < Vec < u64 > > ( ) .into_iter ( ) ;
+
+        let frames  : Vec < String > = frames .clone ( ) .into_iter ( ) .map ( | frame : ( String , u64 ) | -> String { frame .0 } ) .collect:: < Vec < String > > ( ) ;
+
+        animate! ( frames -> sleep timings .next ( ) ) ;
 
         println! ( "" ) ;
 
