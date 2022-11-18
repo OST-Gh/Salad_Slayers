@@ -130,6 +130,11 @@ fn main ( ) -> Result < Void > {
 
                 let command : Vec < &str > = command .trim_start_matches ( "#" ) .split ( ";" ) .collect:: < Vec < &str > > ( ) ;
 
+                let length : usize = command [ 1_usize ] .clone ( ) .chars ( ) .count ( ) ;
+
+                let Some ( start ) = command [ 1_usize ] .clone ( ) .chars ( )          .position ( | character | character == '"' ) else { return Result::Error ( Error::Position ) ; } ;
+                let Some ( end   ) = command [ 1_usize ] .clone ( ) .chars ( ) .rev ( ) .position ( | character | character == '"' ) else { return Result::Error ( Error::Position ) ; } ;
+
                 let duration : u64 = match command [ 0_usize ] .trim ( ) .parse:: < u64 > ( ) {
 
                     Ok  ( value ) => { value                                   } ,
@@ -139,11 +144,11 @@ fn main ( ) -> Result < Void > {
 
                 if is_loop {
 
-                    buffer .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
+                    buffer .push ( ( String::from ( &( command [ 1_usize ] .clone ( ) [ start + 1_usize .. length - end - 1_usize ] ) ) , duration ) ) ;
 
                 } else {
 
-                    frames .push ( ( String::from ( command [ 1_usize ] .clone ( ) ) , duration ) ) ;
+                    frames .push ( ( String::from ( &( command [ 1_usize ] .clone ( ) [ start + 1_usize .. length - end - 1_usize ] ) ) , duration ) ) ;
 
                 }
                     
@@ -200,7 +205,13 @@ fn main ( ) -> Result < Void > {
 
         let frames  : Vec < String > = frames .clone ( ) .into_iter ( ) .map ( | frame : ( String , u64 ) | -> String { frame .0 } ) .collect:: < Vec < String > > ( ) ;
 
-        animate! ( frames -> sleep timings .next ( ) ) ;
+        animate! ( frames -> {
+
+            let Some ( time ) = timings .next ( ) else { break ; } ;
+
+            std::thread::sleep ( std::time::Duration::from_millis ( time ) ) ;
+
+        } ) ;
 
         println! ( "" ) ;
 
