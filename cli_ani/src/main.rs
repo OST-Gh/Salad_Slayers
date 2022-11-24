@@ -205,7 +205,7 @@ fn main ( ) -> Result < Void > {
 
         let frames  : Vec < String > = frames .clone ( ) .into_iter ( ) .map ( | frame : ( String , u64 ) | -> String { frame .0 } ) .collect:: < Vec < String > > ( ) ;
 
-        animate! ( frames -> {
+        animate! ( frames => {
 
             let Some ( time ) = timings .next ( ) else { break ; } ;
 
