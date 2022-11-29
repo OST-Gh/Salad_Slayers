@@ -1,7 +1,6 @@
 use lib::* ;
 use std::fs::read_to_string ;
 use std::path::PathBuf ;
-use std::io::Write ;
 
 fn main ( ) -> Result < Void > {
 
@@ -15,9 +14,9 @@ fn main ( ) -> Result < Void > {
 
         loop {
 
-            match read_line ( Some ( "|  " ) ) {
+            match read_line ( "|  " ) {
 
-                Result::Fine  ( value ) => {
+                Result::Fine  ( ( value , _void ) ) => {
 
                     if value == "@" {
 
@@ -157,7 +156,7 @@ fn main ( ) -> Result < Void > {
 
             if command .ends_with ( "[" ) {
 
-                is_loop = true ;
+                is_loop = !( is_loop ) ;
 
                 range = match command .trim_end_matches ( "[") .trim ( ) .parse:: < usize > ( ) {
 
@@ -170,7 +169,7 @@ fn main ( ) -> Result < Void > {
 
             if command .starts_with ( "]" ) {
 
-                is_loop = false ;
+                is_loop = !( is_loop ) ;
 
                 let condition : usize = match command .trim_start_matches ( "]") .trim ( ) .parse:: < usize > ( ) {
 
