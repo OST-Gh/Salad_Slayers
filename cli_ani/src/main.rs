@@ -14,7 +14,7 @@ fn main ( ) -> Result < Void > {
 
         loop {
 
-            match read_line ( "|  " ) {
+            match read_line ( "|  " , | _void : char | -> bool { false } ) {
 
                 Result::Fine  ( ( value , _void ) ) => {
 
