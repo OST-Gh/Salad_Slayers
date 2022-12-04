@@ -16,7 +16,7 @@ fn main ( ) -> Result < Void > {
 
             match read_line ( "|  " , | _void : char | -> bool { false } ) {
 
-                Result::Fine  ( ( value , _void ) ) => {
+                Result::Fine  ( value ) => {
 
                     if value == "@" {
 
