@@ -16,7 +16,7 @@ fn main ( ) -> Result < Void > {
 
             match read_line ( "|  " , | _void : char | -> bool { false } ) {
 
-                Result::Fine  ( value ) => {
+                Result::Good ( value ) => {
 
                     if value == "@" {
 
@@ -56,7 +56,7 @@ fn main ( ) -> Result < Void > {
 
                             None => {
 
-                                return Result::Error ( Error::Environment ) ;
+                                return Result::Evil ( Error::Environment ) ;
 
                             } ,
 
@@ -78,7 +78,7 @@ fn main ( ) -> Result < Void > {
 
                             } ,
 
-                            Err ( _void ) => { return Result::Error ( Error::Read ) ; } ,
+                            Err ( _void ) => { return Result::Evil ( Error::Read ) ; } ,
 
                         } ;
 
@@ -90,7 +90,7 @@ fn main ( ) -> Result < Void > {
 
                 } ,
 
-                Result::Error ( error ) => { return Result::Error ( error ) } ,
+                Result::Evil ( error ) => { return Result::Evil ( error ) } ,
 
             } ;
 
@@ -102,15 +102,15 @@ fn main ( ) -> Result < Void > {
 
         let start : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "run!" ) {
 
-            Some ( value ) => { value                                      } ,
-            None           => { return Result::Error ( Error::Position ) ; } ,
+            Some ( value ) => { value                                     } ,
+            None           => { return Result::Evil ( Error::Position ) ; } ,
 
         } ;
         
         let stop  : usize = match text .clone ( ) .iter ( ) .position ( | text | text .trim ( ) == "end!" ) {
 
             Some ( value ) => { value                                      } ,
-            None           => { return Result::Error ( Error::Position ) ; } ,
+            None           => { return Result::Evil ( Error::Position ) ; } ,
 
         } ;
         
@@ -131,13 +131,13 @@ fn main ( ) -> Result < Void > {
 
                 let length : usize = command [ 1_usize ] .clone ( ) .chars ( ) .count ( ) ;
 
-                let Some ( start ) = command [ 1_usize ] .clone ( ) .chars ( )          .position ( | character | character == '"' ) else { return Result::Error ( Error::Position ) ; } ;
-                let Some ( end   ) = command [ 1_usize ] .clone ( ) .chars ( ) .rev ( ) .position ( | character | character == '"' ) else { return Result::Error ( Error::Position ) ; } ;
+                let Some ( start ) = command [ 1_usize ] .clone ( ) .chars ( )          .position ( | character | character == '"' ) else { return Result::Evil ( Error::Position ) ; } ;
+                let Some ( end   ) = command [ 1_usize ] .clone ( ) .chars ( ) .rev ( ) .position ( | character | character == '"' ) else { return Result::Evil ( Error::Position ) ; } ;
 
                 let duration : u64 = match command [ 0_usize ] .trim ( ) .parse:: < u64 > ( ) {
 
                     Ok  ( value ) => { value                                   } ,
-                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
+                    Err ( _void ) => { return Result::Evil ( Error::Parse ) ; } ,
 
                 } ;
 
@@ -160,8 +160,8 @@ fn main ( ) -> Result < Void > {
 
                 range = match command .trim_end_matches ( "[") .trim ( ) .parse:: < usize > ( ) {
 
-                    Ok  ( value ) => { value                                   } ,
-                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
+                    Ok  ( value ) => { value                                  } ,
+                    Err ( _void ) => { return Result::Evil ( Error::Parse ) ; } ,
 
                 } ;
 
@@ -173,12 +173,12 @@ fn main ( ) -> Result < Void > {
 
                 let condition : usize = match command .trim_start_matches ( "]") .trim ( ) .parse:: < usize > ( ) {
 
-                    Ok  ( value ) => { value                                   } ,
-                    Err ( _void ) => { return Result::Error ( Error::Parse ) ; } ,
+                    Ok  ( value ) => { value                                  } ,
+                    Err ( _void ) => { return Result::Evil ( Error::Parse ) ; } ,
 
                 } ;
 
-                if condition != range { return Result::Error ( Error::Compare ) ; } ;
+                if condition != range { return Result::Evil ( Error::Compare ) ; } ;
 
                 for _void in 0_usize .. range {
 
@@ -204,7 +204,13 @@ fn main ( ) -> Result < Void > {
 
         let frames  : Vec < String > = frames .clone ( ) .into_iter ( ) .map ( | frame : ( String , u64 ) | -> String { frame .0 } ) .collect:: < Vec < String > > ( ) ;
 
-        animate! ( frames => {
+        let Some ( last ) : Option < String > = frames .clone ( ) .into_iter ( ) .last ( ) else {
+
+            return ( Result::Evil ( Error::Position ) ) ;
+
+        } ;
+
+        animate! ( frames => last ; {
 
             let Some ( time ) = timings .next ( ) else { break ; } ;
 
@@ -216,6 +222,6 @@ fn main ( ) -> Result < Void > {
 
     }
 
-    return Result::Fine ( Void ) ;
+    return Result::Good( Void ) ;
 
 }
