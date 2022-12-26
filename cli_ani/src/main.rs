@@ -26,61 +26,29 @@ fn main ( ) -> Result < Void > {
 
                     } ;
 
-                    if value == "start!" {
+                    if value == "start!" { break ; } ;
 
-                        break ;
-
-                    } ;
-
-                    if value .starts_with ( "debug!" ) {
-
-                        debug = true ;
-
-                    } ;
+                    if value .starts_with ( "debug!" ) { debug = true ; } ;
 
                     if value .starts_with ( "script!" ) {
 
                         let name : &str = value .trim ( ) .trim_start_matches ( "script!" ) .trim ( ) ;
 
-                        let home : PathBuf = match dirs::home_dir ( ) {
+                        let Some ( mut path ) : Option < PathBuf > = dirs::home_dir ( ) else {
 
-                            Some ( value ) => {
-
-                                let mut path : PathBuf = value ;
-
-                                path .push ( &format! ( "{name}.txt" ) ) ;
-
-                                path
-
-                            } ,
-
-                            None => {
-
-                                return Result::Evil ( Error::Environment ) ;
-
-                            } ,
+                            return Result::Evil ( Error::Environment ) ;
 
                         } ;
 
-                        text = match read_to_string ( &home ) {
+                        path .push ( &format! ( "{name}.txt" ) ) ; 
 
-                            Ok ( text ) => {
+                        let Ok ( lines ) : std::result::Result < String > = read_to_string ( &path ) else {
 
-                                text .split ( "\n" ) .map (
-
-                                    | line : &str | -> String {
-
-                                        String::from ( line )
-
-                                    }
-
-                                ) .collect:: < Vec < String > > ( )
-
-                            } ,
-
-                            Err ( _void ) => { return Result::Evil ( Error::Read ) ; } ,
+                            return Result::Evil ( Error::Read ) ;
 
                         } ;
+
+                        text = lines .split ( "\n" ) .map ( | line : &str | -> String { String::from ( line ) } ) .collect:: < Vec < String > > ( ) ;
 
                         break ;
 
@@ -206,17 +174,21 @@ fn main ( ) -> Result < Void > {
 
         let Some ( last ) : Option < String > = frames .clone ( ) .into_iter ( ) .last ( ) else {
 
-            return ( Result::Evil ( Error::Position ) ) ;
+            return Result::Evil ( Error::Position ) ;
 
         } ;
 
-        animate! ( frames => last ; {
+        animate! (
 
-            let Some ( time ) = timings .next ( ) else { break ; } ;
+            frames => last ; {
 
-            std::thread::sleep ( std::time::Duration::from_millis ( time ) ) ;
+                let Some ( time ) = timings .next ( ) else { break ; } ;
 
-        } ) ;
+                std::thread::sleep ( std::time::Duration::from_millis ( time ) ) ;
+
+            }
+
+        ) ;
 
         println! ( "" ) ;
 
